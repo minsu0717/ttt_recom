@@ -85,11 +85,12 @@ class MovieRecommandResource(Resource):
             cursor.execute(query,record)
             
             record_list = cursor.fetchall()
+            # print(record_list)
             movie_id=[]
             for i in range(len(record_list)):
                 movie_id.append(record_list[i][0])
             
-
+            # print(movie_id)
 
         except Error as e :
             print('Error',e)
@@ -99,4 +100,13 @@ class MovieRecommandResource(Resource):
                 connection.close()
                 print('MySQL connection is closed')
         
-        return {'result':movie_REC(movie_id)}
+        
+        df=pd.read_csv("data/final.csv",index_col=0)
+        df.index=df.index+1
+        df=df.reset_index()
+        
+        rec=movie_REC(movie_id)
+        movie = []
+        for i in range(len(rec)):
+              movie.append(df.loc[df['index']==rec[i][0],['index','title','poster','provider']].to_dict('records'))
+        return {'result':movie}
