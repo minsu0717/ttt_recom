@@ -108,5 +108,54 @@ class MovieRecommandResource(Resource):
         rec=movie_REC(movie_id)
         movie = []
         for i in range(len(rec)):
-              movie.append(df.loc[df['index']==rec[i][0],['index','title','poster','provider']].to_dict('records'))
-        return {'result':movie}
+              movie.append(df.loc[df['index']==rec[i][0],['index','title','poster','provider','urls']].to_dict('records'))
+        
+        nfx = []
+        wac = []
+        wav = []
+        prv = []
+        dnp = []
+        m_p = []
+        for j in range(len(movie)):
+          if movie[j][0]['provider'].count(',') == 0:
+            if movie[j][0]['provider'] == '넷플릭스':
+              nfx.append(movie[j][0]['provider'])
+            elif movie[j][0]['provider'] == '왓챠':
+              wac.append(movie[j][0]['provider'])
+            elif movie[j][0]['provider'] == '웨이브':
+              wav.append(movie[j][0]['provider'])
+            elif movie[j][0]['provider'] == 'prv':
+              prv.append(movie[j][0]['provider'])
+            elif movie[j][0]['provider'] == 'dnp':
+              dnp.append(movie[j][0]['provider'])
+          elif movie[j][0]['provider'].count(',') >= 1:
+            m_p.append(movie[j][0]['provider'].split(','))
+            for k in m_p:
+              for s in range(len(k)):
+                if k[s] == '넷플릭스':
+                  nfx.append(k[s])
+                elif k[s]  == '왓챠':
+                  wac.append(k[s])
+                elif k[s]  == 'prv':
+                  prv.append(k[s])
+                elif k[s]  == 'dnp':
+                  dnp.append(k[s])
+                elif k[s]  == '웨이브':
+                  wav.append(k[s])
+                  
+          total=len(nfx)+len(wac)+len(prv)+len(wav)+len(dnp)
+          
+          nfx_c = len(nfx)
+          wac_c=len(wac)
+          prv_c=len(prv)
+          wav_c=len(wav)
+          dnp_c=len(dnp)
+          
+          wac_p=int(round(wac_c / total,2)*100)
+          nfx_p=int(round(nfx_c / total,2)*100)
+          wav_p=int(round(wav_c / total,2)*100)
+          prv_p=int(round(prv_c / total,2)*100)
+          dnp_p=int(round(dnp_c / total,2)*100)
+          
+          per = dict(wac=wac_p, nfx=nfx_p, wav=wav_p, prv=prv_p, dnp=dnp_p)
+        return {'per':per,'result':movie}
