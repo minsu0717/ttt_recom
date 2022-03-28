@@ -189,7 +189,52 @@ class MovieRecommandResource_1(Resource):
     def get(self):
         movie_id=request.args.get('movie_id')
         movie_ids_str = movie_id.split(",")
-        movie_ids=[int() for i in movie_ids_str]
+        movie_ids = []
+        for i in movie_ids_str:
+          movie_ids.append(int(i))
         print(movie_ids)
+        try:
+            # 1. db에 연결
+            connection = get_connection()
+            
+            # 2. 쿼리문 만들고
+            query = '''select *
+                      from movie_2
+                      where id = %s or id = %s or id = %s or id = %s or id = %s 
+                      or id = %s or id = %s or id = %s or id = %s or id = %s 
+                      or id = %s or id = %s or id = %s or id = %s ;'''
+            # 파이썬에서, 튜플만들때, 데이터가 1개인 경우에는
+            # 콤마를 꼭 써준다
+            record = (movie_ids[0],movie_ids[1],movie_ids[2],movie_ids[3],movie_ids[4],movie_ids[5],movie_ids[6],movie_ids[7],movie_ids[8],movie_ids[9],movie_ids[10],movie_ids[11],movie_ids[12],movie_ids[13])
+            # 3. 커넥션으로부터 커서를 가져온다            
+            cursor = connection.cursor()
+            
+            # 4. 쿼리문을 커서에 넣어서 실행한다.
+            cursor.execute(query,record)
+            
+            record_list = cursor.fetchall()
+            # print(record_list)
+            movie_id=[]
+            for i in range(len(record_list)):
+                movie_id.append(record_list[i][0])
+            
+            # print(movie_id)
+
+        except Error as e :
+            print('Error',e)
+        finally :
+            if connection.is_connected():
+                cursor.close()
+                connection.close()
+                print('MySQL connection is closed')
+        
+        df=pd.read_csv("data/final.csv",index_col=0)
+        df.index=df.index+1
+        df=df.reset_index()
+        
+        rec=movie_REC_by_id(movie_id)
+        movie = []
+        for i in range(len(rec)):
+              movie.append(df.loc[df['index']==rec[i][0],['index','title','poster','provider','urls']].to_dict('records'))
         # return {'result' : movie_ids}
-        return {'result':movie_REC_by_id(movie_ids)}
+        return {'result':movie}
