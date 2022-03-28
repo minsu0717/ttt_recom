@@ -62,29 +62,21 @@ def movie_REC(movie_id, cosine_sim=new_cosine_sim):
     return sorted(rating.items(), key=lambda x: x[1], reverse=True)[:100]
   
 def movie_REC_by_id(movie_id, cosine_sim=new_cosine_sim):
-    rating = {}
-    m_id_list=[]
-    #입력한 영화들로 부터 인덱스 가져오기
-    for m_id in movie_id:
-      m_id_list.append(m_id)
-      # 모든 영화에 대해서 해당 영화와의 유사도를 구하기
-      sim_scores = list(enumerate(new_cosine_sim.iloc[m_id]))
-      # 유사도에 따라 영화들을 정렬
-      sim_scores = sorted(sim_scores, key=lambda x:x[1], reverse = True)
-      # 가장 유사한 100개의 영화를 받아옴
-      sim_scores = sim_scores[1:101]
-      for i in range(100):
-        id = sim_scores[i][0]
-        score = sim_scores[i][1]
-        if id not in rating.keys():
-          rating[id] = score
-        else:
-          rating[id]= rating[id]+score
-      for m_id in m_id_list:
-        if m_id in rating.keys():
-          del rating[m_id]
-    return sorted(rating.items(), key=lambda x: x[1], reverse=True)[:14]
-
+  rating = {}
+  # 모든 영화에 대해서 해당 영화와의 유사도를 구하기
+  sim_scores = list(enumerate(new_cosine_sim.iloc[movie_id]))
+  # 유사도에 따라 영화들을 정렬
+  sim_scores = sorted(sim_scores, key=lambda x:x[1], reverse = True)
+  # 가장 유사한 100개의 영화를 받아옴
+  sim_scores = sim_scores[1:101]
+  for i in range(100):
+    id = sim_scores[i][0]
+    score = sim_scores[i][1]
+    if id not in rating.keys():
+      rating[id] = score
+    else:
+      rating[id]= rating[id]+score
+  return sorted(rating.items(), key=lambda x: x[1], reverse=True)[:14]
 
 
 class MovieRecommandResource(Resource):
@@ -188,11 +180,7 @@ class MovieRecommandResource(Resource):
 class MovieRecommandResource_1(Resource):
     def get(self):
         movie_id=request.args.get('movie_id')
-        movie_ids_str = movie_id.split(",")
-        movie_ids = []
-        for i in movie_ids_str:
-          movie_ids.append(int(i))
-        print(movie_ids)
+        
         try:
             # 1. db에 연결
             connection = get_connection()
@@ -200,12 +188,10 @@ class MovieRecommandResource_1(Resource):
             # 2. 쿼리문 만들고
             query = '''select *
                       from movie_2
-                      where id = %s or id = %s or id = %s or id = %s or id = %s 
-                      or id = %s or id = %s or id = %s or id = %s or id = %s 
-                      or id = %s or id = %s or id = %s or id = %s ;'''
+                      where id = %s'''
             # 파이썬에서, 튜플만들때, 데이터가 1개인 경우에는
             # 콤마를 꼭 써준다
-            record = (movie_ids[0],movie_ids[1],movie_ids[2],movie_ids[3],movie_ids[4],movie_ids[5],movie_ids[6],movie_ids[7],movie_ids[8],movie_ids[9],movie_ids[10],movie_ids[11],movie_ids[12],movie_ids[13])
+            record = (movie_id,)
             # 3. 커넥션으로부터 커서를 가져온다            
             cursor = connection.cursor()
             
@@ -214,9 +200,7 @@ class MovieRecommandResource_1(Resource):
             
             record_list = cursor.fetchall()
             # print(record_list)
-            movie_id=[]
-            for i in range(len(record_list)):
-                movie_id.append(record_list[i][0])
+            movie_id=record_list[0][0]
             
             # print(movie_id)
 
